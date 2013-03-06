@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ExcelExporter.Demo
 {
-    class ExampleObject
+    class SimpleExample
     {
         [ExcelColumn("Item #", ExcelColumnFormat.Text)]
         public String ItemNumber { get; set; }
@@ -14,10 +14,10 @@ namespace ExcelExporter.Demo
         [ExcelColumn("Qty", ExcelColumnFormat.Number)]
         public Int32 Quantity { get; set; }
 
-        [ExcelColumn("Unit Price", ExcelColumnFormat.Currency)]
+        [ExcelColumn("Unit Price", ExcelColumnFormat.Currency, Summary = ExcelColumnSummary.Average)]
         public Double UnitPrice { get; set; }
 
-        [ExcelColumn("Extended Price", ExcelColumnFormat.Currency)]
+        [ExcelColumn("Extended Price", ExcelColumnFormat.Currency, Summary = ExcelColumnSummary.Total)]
         public Double ExtendedPrice
         {
             get { return this.Quantity * this.UnitPrice; }
@@ -31,12 +31,12 @@ namespace ExcelExporter.Demo
     {
         static void Main(string[] args)
         {
-            List<ExampleObject> examples = new List<ExampleObject>();
+            List<SimpleExample> simpleExamples = new List<SimpleExample>();
             Random random = new Random(DateTime.Now.Millisecond);
             String[] itemNames = new[]{ "Apple", "Banana", "Cherry", "Grapefruit", "Kiwi", "Lime", "Mango", "Orange" };
             for (Int32 i = 0; i < itemNames.Length; i++)
             {
-                examples.Add(new ExampleObject
+                simpleExamples.Add(new SimpleExample
                 {
                     ItemNumber = (i + 1).ToString("D3"),
                     Description = itemNames[i],
@@ -46,11 +46,10 @@ namespace ExcelExporter.Demo
                 });
             }
 
-            ExcelExporter exporter = new ExcelExporter();
-            exporter.ExportToSheet<ExampleObject>(examples, "Examples");
-
-            examples.Add(new ExampleObject { ItemNumber = "999", Description = "Last Object", Quantity = 99, UnitPrice = 999.99, LastPurchased = DateTime.Now.AddDays(99) });
-            exporter.ExportToSheet<ExampleObject>(examples, "Examples (+1)");
+            using (ExcelExporter exporter = new ExcelExporter())
+            {
+                exporter.ExportToSheet<SimpleExample>(simpleExamples, "Examples");
+            }
         }
     }
 }

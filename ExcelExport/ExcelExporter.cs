@@ -22,6 +22,11 @@ namespace ExcelExporter
         /// </summary>
         private Excel.Workbook xlBook;
 
+        /// <summary>
+        /// The title bar height
+        /// </summary>
+        private Int32 titleHeight = 1;
+
         #region Ctor
 
         /// <summary>
@@ -102,7 +107,7 @@ namespace ExcelExporter
                     throw new ApplicationException("Unable to fetch sheets to add new worksheet.");
                 }
                 xlSheet = xlSheets.Add() as Excel.Worksheet;
-                Marshal.ReleaseComObject(xlSheets);
+                Marshal.FinalReleaseComObject(xlSheets);
             }
             if (xlSheet == null)
             {
@@ -119,8 +124,8 @@ namespace ExcelExporter
             this.AddItemsToSheet<T>(xlSheet, properties, items);
             this.AddFinalTouches(xlSheet);
 
-            Marshal.ReleaseComObject(usedRange);
-            Marshal.ReleaseComObject(xlSheet);
+            Marshal.FinalReleaseComObject(usedRange);
+            Marshal.FinalReleaseComObject(xlSheet);
         }
 
         /// <summary>
@@ -134,7 +139,6 @@ namespace ExcelExporter
         {
             T[] itemsArray = items.ToArray<T>();
 
-            Int32 rowOffset = 1; // skip past header row
             Int32 rows = itemsArray.Length;
             Int32 columns = properties.Count;
 
@@ -148,20 +152,19 @@ namespace ExcelExporter
                 }
             }
 
-            Excel.Range topLeft = xlSheet.Cells[1 + rowOffset, 1] as Excel.Range;
-            Excel.Range bottomRight = xlSheet.Cells[rowOffset + rows, columns] as Excel.Range;
+            Excel.Range topLeft = xlSheet.Cells[1 + this.titleHeight, 1] as Excel.Range;
+            Excel.Range bottomRight = xlSheet.Cells[this.titleHeight + rows, columns] as Excel.Range;
             Excel.Range inputRange = xlSheet.Range[topLeft, bottomRight] as Excel.Range;
             inputRange.Value2 = dataset;
 
-            Marshal.ReleaseComObject(topLeft);
-            Marshal.ReleaseComObject(bottomRight);
-            Marshal.ReleaseComObject(inputRange);
+            Marshal.FinalReleaseComObject(topLeft);
+            Marshal.FinalReleaseComObject(bottomRight);
+            Marshal.FinalReleaseComObject(inputRange);
         }
 
         private void AddFinalTouches(Excel.Worksheet xlSheet)
         {
-            Excel.Range firstCell = xlSheet.Cells[1,1] as Excel.Range;
-            if (firstCell != null)
+            Excel.Range firstCell = xlSheet.Cells[1, 1] as Excel.Range;
             {
                 Excel.Range titleRow = firstCell.EntireRow as Excel.Range;
                 titleRow.RowHeight *= 2;
@@ -172,9 +175,9 @@ namespace ExcelExporter
                 Excel.Window xlWindow = this.xlApp.ActiveWindow;
                 xlWindow.SplitRow = 1;
                 xlWindow.FreezePanes = true;
-                Marshal.ReleaseComObject(xlWindow);
+                Marshal.FinalReleaseComObject(xlWindow);
             }
-            Marshal.ReleaseComObject(firstCell);
+            Marshal.FinalReleaseComObject(firstCell);
         }
 
         /// <summary>
@@ -191,12 +194,14 @@ namespace ExcelExporter
 
                 String titleText = property.Name;
                 ExcelColumnFormat? titleFormat = null;
+                ExcelColumnSummary? titleSummary = null;
 
                 ExcelColumnAttribute xlColAttr = property.Attributes.OfType<ExcelColumnAttribute>().FirstOrDefault();
                 if (xlColAttr != null)
                 {
                     titleText = xlColAttr.Title;
                     titleFormat = xlColAttr.Format;
+                    titleSummary = xlColAttr.Summary;
                 }
 
                 titleCell = xlSheet.Cells[1, p + 1] as Excel.Range;
@@ -207,11 +212,23 @@ namespace ExcelExporter
                 {
                     Excel.Range titleColumn = titleCell.EntireColumn;
                     ApplyFormatToRange(titleColumn, titleFormat.Value);
-                    Marshal.ReleaseComObject(titleColumn);
+                    Marshal.FinalReleaseComObject(titleColumn);
                 }
                 titleCell.NumberFormat = "@";
+
+                if (titleSummary.HasValue)
+                {
+                    Boolean newRowSuccess = (Boolean)xlSheet.Rows.Insert(2, 1);
+
+                    if (newRowSuccess)
+                    {
+                        this.titleHeight += 2;
+                    }
+
+                    //Marshal.FinalReleaseComObject(titleRow);
+                }
             }
-            Marshal.ReleaseComObject(titleCell);
+            Marshal.FinalReleaseComObject(titleCell);
         }
 
         /// <summary>
@@ -267,8 +284,6 @@ namespace ExcelExporter
         /// </summary>
         ~ExcelExporter()
         {
-            this.xlApp.Visible = true;
-
             this.Dispose(false);
         }
 
@@ -286,6 +301,8 @@ namespace ExcelExporter
         /// </summary>
         public void Dispose()
         {
+            this.xlApp.Visible = true;
+
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -302,8 +319,8 @@ namespace ExcelExporter
 
                 if (disposing)
                 {
-                    this.xlBook.Close();
-                    this.xlApp.Quit();
+                    //this.xlBook.Close();
+                    //this.xlApp.Quit();
                 }
 
                 Marshal.FinalReleaseComObject(this.xlBook);

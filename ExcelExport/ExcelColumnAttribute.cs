@@ -65,6 +65,27 @@ namespace ExcelExporter
     }
 
     /// <summary>
+    /// Enum ExcelColumnSummary
+    /// </summary>
+    public enum ExcelColumnSummary
+    {
+        /// <summary>
+        /// Do not add a summary
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Display a total for the column
+        /// </summary>
+        Total,
+
+        /// <summary>
+        /// Display an average for the column
+        /// </summary>
+        Average
+    }
+
+    /// <summary>
     /// Property decorations providing more control over how it is exported to Excel.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
@@ -81,6 +102,12 @@ namespace ExcelExporter
         /// </summary>
         /// <value>The column format.</value>
         public ExcelColumnFormat Format { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the summary setting.
+        /// </summary>
+        /// <value>The summary.</value>
+        public ExcelColumnSummary Summary { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExcelColumnAttribute"/> class.
