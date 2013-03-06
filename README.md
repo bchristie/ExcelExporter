@@ -25,3 +25,10 @@ titles) and an `ExcelColumnAttribute` decorator for further customization. e.g.
         [ExcelColumn("Amount Due", ExcelColumnFormat.Currency)]
         public Double Amount { get; set; }
     }
+
+Resulting in something similar to:
+
+<kbd>Invoice</kbd><kbd>Amount Due</kbd>  
+<kbd>00123&nbsp;</kbd><kbd>1,024.99&nbsp;&nbsp;&emsp;</kbd>  
+<kbd>00124&nbsp;</kbd><kbd>2,048.99&nbsp;&nbsp;&emsp;</kbd>  
+<kbd>00125&nbsp;</kbd><kbd>4,096.99&nbsp;&nbsp;&emsp;</kbd>
